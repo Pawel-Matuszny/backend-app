@@ -1,28 +1,22 @@
 FROM python:3
 
-RUN apt update
-RUN apt install build-essential nginx --yes
+RUN apt update && apt install build-essential python-dev nginx --yes &&\
+    apt-get clean autoclean &&\
+    apt-get autoremove --yes &&\
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENV LISTEN_PORT 80
-ENV NGINX_MAX_UPLOAD 0
 ENV PYTHONUNBUFFERED=1
-#ENV USER_NAME=uwsgi
 
-ARG USER_NAME
-RUN useradd -ms /bin/bash ${USER_NAME}
+ARG UID=1000
+RUN useradd -d /user -l -m -Uu ${UID} -r -s /bin/bash user
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+COPY nginx.conf /etc/nginx/conf.d/
+
+COPY --chown=${UID}:${UID} . /app
 
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
 
-COPY . /app
-WORKDIR /app
-
-
-CMD ["/start.sh"]
+CMD ["bash", "/start.sh"]

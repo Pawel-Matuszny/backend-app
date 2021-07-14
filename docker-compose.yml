@@ -1,25 +1,27 @@
 version: '3.9'
 services:
-    db:
-        image: postgres
-        environment:
-            - POSTGRES_DB=app_db
-            - POSTGRES_USER=pawel
-            - POSTGRES_PASSWORD=pawel123
-        volumes:
-            - database-data:/var/lib/postgresql/data/ 
-        ports:
-            - "5432:5432"
-    app:
-        build: 
-            context: .
-            args:
-                USER_NAME: uwsgi
-        ports:
-            - "80:80"
-        volumes:
-            - .:/app
-        depends_on:
-            - db
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - database-data:/var/lib/postgresql/data/ 
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+  app:
+    build: 
+      context: .
+      args:
+        UID: "${APP_UID}"
+    init: true
+    env_file: .env
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
 volumes:
-    database-data:
+  database-data:
